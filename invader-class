@@ -1,0 +1,74 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Microsoft.Xna.Framework;
+
+namespace SpaceInvader
+{
+    class Invader
+    {
+        private int x, y, alive;
+
+        //constructor for invader type
+        public Invader(int xpos, int ypos)
+        {
+            this.x = xpos;
+            this.y = ypos;
+            this.alive = 1;
+        }
+
+        //Get and set attributes for X pos
+        public int X
+        {
+            get
+            {
+                return this.x; 
+            }
+            set
+            {
+                this.x = value;
+            }
+        }
+
+        //Get and set Y pos
+        public int Y
+        {
+            get
+            {
+                return this.y;
+            }
+            set
+            {
+                this.y = value;
+            }
+        }
+
+        //Get and set alive
+        public int Alive
+        {
+            get
+            {
+                return this.alive;
+            }
+            set 
+            {
+                this.alive = value;
+            }
+        }
+
+        //Method for returing invader pos
+        public Vector2 GetXYpos()
+
+        {
+            Vector2 position = new Vector2 ((float)this.x, (float)this.y);
+            return position;
+        }
+
+        //change direction
+        public void Move(int speedx)
+        {
+            this.x = this.x + speedx;
+        }
+    }
+}
