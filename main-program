@@ -1,0 +1,296 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.GamerServices;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
+
+namespace SpaceInvader
+{
+    /// <summary>
+    /// This is the main type for your game
+    /// </summary>
+    public class Game1 : Microsoft.Xna.Framework.Game
+    {
+        GraphicsDeviceManager graphics;
+        SpriteBatch spriteBatch;
+
+        Texture2D invaderimage;
+        Texture2D missileimage;
+        Texture2D launcherimage;
+        Texture2D backgroundimage;
+        Texture2D explosionimage;
+
+        //Vector2 invaderpos;
+        Vector2 missilepos;
+        Vector2 launcherpos;
+        Vector2 backgroundpos;
+        Vector2 explosionpos;
+
+        //set array of invaders
+        Invader[] invaders = new Invader[11];
+
+        Rectangle invaderrect; 
+        Rectangle missilerect;
+
+        int speedx = 3;
+        int missileactive = 0;
+        //int invaderalive = 1;
+        int explosionalive = 0;
+        int explostioncounter = 0;
+        int invadercounter = 0;
+        int maxx, minx;
+
+        public Game1()
+        {
+            graphics = new GraphicsDeviceManager(this);
+
+            //Set window settings
+            graphics.PreferredBackBufferWidth = 1024;
+            graphics.PreferredBackBufferHeight = 640;
+
+            Content.RootDirectory = "Content";
+        }
+
+        /// <summary>
+        /// Allows the game to perform any initialization it needs to before starting to run.
+        /// This is where it can query for any required services and load any non-graphic
+        /// related content.  Calling base.Initialize will enumerate through any components
+        /// and initialize them as well.
+        /// </summary>
+        protected override void Initialize()
+        {
+            // TODO: Add your initialization logic here
+
+            //initialise positions
+
+            //invaderpos = new Vector2(100, 50);
+
+            //set invader positions
+            for (invadercounter = 0; invadercounter < 11; invadercounter++)
+            {
+                invaders[invadercounter] = new Invader(20 + 60 * invadercounter, 60);
+            }
+
+
+            missilepos = new Vector2(0, 0);
+            launcherpos = new Vector2(522, 550);
+            backgroundpos = new Vector2(0, 0);
+            explosionpos = new Vector2(0, 0);
+
+            base.Initialize();
+        }
+
+        /// <summary>
+        /// LoadContent will be called once per game and is the place to load
+        /// all of your content.
+        /// </summary>
+        protected override void LoadContent()
+        {
+            // Create a new SpriteBatch, which can be used to draw textures.
+            spriteBatch = new SpriteBatch(GraphicsDevice);
+
+            // TODO: use this.Content to load your game content here
+
+            invaderimage = Content.Load<Texture2D>("Invader");
+            missileimage = Content.Load<Texture2D>("Missile");
+            launcherimage = Content.Load<Texture2D>("RocketLauncher");
+            backgroundimage = Content.Load<Texture2D>("Starfield1024x768");
+            explosionimage = Content.Load<Texture2D>("Explosion");
+
+            invaderrect = new Rectangle(0, 0, invaderimage.Width, invaderimage.Height);
+            missilerect = new Rectangle(0, 0, missileimage.Width, missileimage.Height);
+        } 
+
+        /// <summary>
+        /// UnloadContent will be called once per game and is the place to unload
+        /// all content.
+        /// </summary>
+        protected override void UnloadContent()
+        {
+            // TODO: Unload any non ContentManager content here
+        }
+
+        /// <summary>
+        /// Allows the game to run logic such as updating the world,
+        /// checking for collisions, gathering input, and playing audio.
+        /// </summary>
+        /// <param name="gameTime">Provides a snapshot of timing values.</param>
+        protected override void Update(GameTime gameTime)
+        {
+            // Allows the game to exit
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
+                this.Exit();
+
+            // TODO: Add your update logic here
+
+            //Control laucher
+            if (Keyboard.GetState().IsKeyDown(Keys.Right))
+            {
+                launcherpos.X = launcherpos.X + 5;
+            }
+
+            if (Keyboard.GetState().IsKeyDown(Keys.Left))
+            {
+                launcherpos.X = launcherpos.X - 5;
+            }
+
+            //Move invader 
+
+            for (invadercounter = 0; invadercounter < 11; invadercounter++)
+            {
+                invaders[invadercounter].X = invaders[invadercounter].X + speedx;
+            }
+
+            maxx = 0;
+            minx = 1000;
+            for (invadercounter = 0; invadercounter < 11; invadercounter++)
+            {
+                if (invaders[invadercounter].Alive == 1)
+                {
+                    if (invaders[invadercounter].X > maxx) maxx = invaders[invadercounter].X;
+                    if (invaders[invadercounter].X < minx) minx = invaders[invadercounter].X;
+                }
+            }
+
+            //Stop invader going off the screen
+            if (maxx > 1024 - invaderimage.Width || minx < 0)
+            {
+                speedx = -speedx;
+
+                for (invadercounter = 0; invadercounter < 11; invadercounter++)
+                {
+                    invaders[invadercounter].Y = invaders[invadercounter].Y + 10;
+                }
+            }
+
+
+
+
+            //invaderpos.X = invaderpos.X + speedx;
+
+            //if (invaderpos.X > 700)
+            //{
+            //    speedx = -speedx;
+            //    invaderpos.Y = invaderpos.Y + 10;
+            //}
+
+            //if (invaderpos.X < 0)
+            //{
+            //    speedx = -speedx;
+            //    invaderpos.Y = invaderpos.Y + 10;
+            //}
+
+            //Launch missile
+            if (Keyboard.GetState().IsKeyDown(Keys.Space))
+            {
+                if (missileactive == 0)
+                {
+                    missileactive = 1;
+                    missilepos.X = launcherpos.X;
+                    missilepos.Y = launcherpos.Y;
+                }
+            }
+
+            //move missile
+            if (missileactive == 1)
+            {
+                missilepos.Y = missilepos.Y - 10;
+                if (missilepos.Y < 0)
+                {
+                    missileactive = 0;
+                }
+
+
+            }
+
+            //Missile hit
+
+                for (invadercounter = 0; invadercounter < 11; invadercounter++)
+                {
+                    if (missileactive == 1)
+                    {
+
+                    if (invaders[invadercounter].Alive == 1)
+                    {
+                        invaderrect.X = (int)invaders[invadercounter].X;
+                        invaderrect.Y = (int)invaders[invadercounter].Y;
+
+                        missilerect.X = (int)missilepos.X;
+                        missilerect.Y = (int)missilepos.Y;
+                    }
+
+
+                    //Set explosion
+                    if (missilerect.Intersects(invaderrect))
+                    {
+                        missileactive = 0;
+                        invaders[invadercounter].Alive = 0;
+
+                        //set explosion and position
+                        explostioncounter = 0;
+                        explosionalive = 1;
+                        explosionpos.X = invaders[invadercounter].X;
+                        explosionpos.Y = invaders[invadercounter].Y;
+                    }
+                }
+
+                //set counter for explosion
+                if (explosionalive == 1)
+                {
+                    explostioncounter++;
+
+                    //kills explosion
+                    if (explostioncounter > 10)
+                    {
+                        explosionalive = 0;
+                    }
+                }
+
+                base.Update(gameTime);
+            }
+        }
+
+        /// <summary>
+        /// This is called when the game should draw itself.
+        /// </summary>
+        /// <param name="gameTime">Provides a snapshot of timing values.</param>
+        protected override void Draw(GameTime gameTime)
+        {
+            GraphicsDevice.Clear(Color.CornflowerBlue);
+
+            // TODO: Add your drawing code here
+
+            spriteBatch.Begin();
+            spriteBatch.Draw(backgroundimage, backgroundpos, Color.White);
+            spriteBatch.Draw(launcherimage, launcherpos, Color.White);
+
+            for (invadercounter = 0; invadercounter < 11; invadercounter++)
+            {
+
+                if (invaders[invadercounter].Alive == 1)
+                {
+                    spriteBatch.Draw(invaderimage, invaders[invadercounter].GetXYpos(), Color.White);
+                }
+            }
+
+            if (missileactive == 1)
+            {
+                spriteBatch.Draw(missileimage, missilepos, Color.White);
+            }
+
+            if (explosionalive == 1)
+            {
+                spriteBatch.Draw(explosionimage, explosionpos, Color.White);
+            }
+
+            spriteBatch.End();
+
+            base.Draw(gameTime);
+        } 
+    }
+}
